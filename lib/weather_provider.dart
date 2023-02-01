@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:async_api_example/weather_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class WeatherProvider extends ChangeNotifier {
+  bool onProcess = false;
   WeatherModel? model;
   String image = 'assets/other.png';
   String smallIcon = '';
@@ -21,13 +25,86 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<void> getSmallIcon(String icon) async {
-  //   Dio dio = Dio();
-  //   final response =
-  //       await dio.get('http://openweathermap.org/img/wn/${icon}@2x.png');
-  //   model = WeatherModel.fromJson(response.data);
-  //   if (model?.weather?[0].main == 'rain') {
-  //     image = 'assets/rain.png';
-  //   }
-  // }
+  Future<void> sendEmail({
+    required BuildContext context,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String message,
+  }) async {
+    if (onProcess) return;
+    onProcess = true;
+
+    String htmlTemplate = '''
+<body>
+<h2>${firstName} ${lastName}  Ваша заявка принята</h2>
+<h3>Phone: <b>${phone}</b></h3>
+<h3>Message: <b>${message}</b></h3>
+''';
+
+    Dio dio = Dio();
+    try {
+      Response response = await dio.post(
+        'https://api.mailazy.com/v1/mail/send',
+        options: Options(
+          headers: {
+            HttpHeaders.contentTypeHeader: "application/json",
+            'X-Api-Key': 'c96n7a1opc08t8plo1h0GcCYRpAbKP',
+            'X-Api-Secret':
+                'mjXoErfTGDWMsmtzgjWTqMHnNMQ.XToPbTibcMiUGodrmUjxTB',
+          },
+        ),
+        data: jsonEncode(
+          {
+            "to": [email],
+            "from": "Sender <info@richmate.ru>",
+            "reply_to": "Flutter Test <info@richmate.ru>",
+            "subject": 'Обратная связь',
+            "content": [
+              {"type": "text/html", "value": htmlTemplate}
+            ]
+          },
+        ),
+      );
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text("Email sent"),
+          content: Text("Email успешно отправлен"),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: Text("Ok"),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text("Email sent error"),
+          content: Text("Email НЕ отправлен"),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: Text("Ok"),
+            ),
+          ],
+        ),
+      );
+    }
+    onProcess = false;
+  }
+
+  bool isEmailValid(String email) {
+    return RegExp(
+            r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+        .hasMatch(email);
+  }
 }

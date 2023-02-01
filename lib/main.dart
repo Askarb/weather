@@ -2,11 +2,7 @@ import 'dart:async';
 
 import 'package:async_api_example/weather_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import 'weather_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,236 +19,145 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
           primarySwatch: Colors.blue,
         ),
-        home: MyHomePage(title: 'Flutter Demo Home Page'),
+        home: MyHomePage(),
       ),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  MyHomePage({super.key, required this.title});
+class MyHomePage extends StatefulWidget {
+  MyHomePage({super.key});
 
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-  final String title;
-  Timer? timer;
-  String currentCity = 'Бишкек';
+class _MyHomePageState extends State<MyHomePage> {
+  final _controllerFirstName = TextEditingController(text: 'Name');
+
+  final _controllerLastName = TextEditingController(text: 'Last Name');
+
+  final _controllerEmail = TextEditingController(text: 'asrock-9@mail.ru');
+
+  final _controllerPhone = TextEditingController(text: '+996555555555');
+
+  final _controllerMessage =
+      TextEditingController(text: 'message message message message message ');
+
+  String? _errorText;
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<WeatherProvider>();
-    if (vm.model == null) vm.getWeather();
-
-    print('Build');
+    var vm = context.watch<WeatherProvider>();
     return Scaffold(
       body: Container(
+        padding: EdgeInsets.all(20),
         width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xff08244F),
-              Color(0xff134CB5),
-              Color(0xff0B42AB),
-            ],
-          ),
-        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: TextEditingController(text: currentCity),
-                decoration: InputDecoration(),
-                style: TextStyle(color: Colors.white),
-                onChanged: (val) {
-                  // print(val);
-                  timer?.cancel();
-                  timer = Timer(
-                    const Duration(seconds: 1),
-                    () {
-                      if (val.length >= 2 && currentCity != val)
-                        vm.getWeather(city: val);
-                      currentCity = val;
-                    },
-                  );
-
-//                 timer = Timer(
-//                     const Duration(seconds: 5), () => print('Timer finished'));
-// // Cancel timer, callback never called.
-//                 timer.cancel();
-                },
-              ),
-            ),
             Text(
-              '${vm.model?.name ?? 'Loading'}',
-              style: TextStyle(color: Colors.white),
-            ),
-            SizedBox(
-              height: 200,
-              child: Image.asset(vm.image),
-            ),
-
-            // Image.network(
-            //     'http://openweathermap.org/img/wn/${vm.model?.weather?[0].icon ?? '01n'}.png')
-            Text(
-              "${vm.model?.main?.temp ?? 'Loading'}\u00b0",
-              style: const TextStyle(
-                fontSize: 64,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            const Text(
-              "Precipitations",
+              'Contact',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 32,
               ),
             ),
             Text(
-              "Max.: ${vm.model?.main?.tempMax}º   Min.: ${vm.model?.main?.tempMin}º",
-              style: const TextStyle(
-                fontSize: 18,
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quam duis vitae curabitur amet, fermentum lorem. ',
+              style: TextStyle(
                 fontWeight: FontWeight.w400,
-                color: Colors.white,
+                fontSize: 14,
               ),
             ),
-            Container(
-              height: 47,
-              margin: const EdgeInsets.only(left: 40, right: 40),
-              decoration: BoxDecoration(
-                color: const Color(0xff001026),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 30),
-                  ChipWidget(
-                    image: 'assets/vlaj.png',
-                    str: '${vm.model?.main?.humidity}%',
-                  ),
-                  Spacer(),
-                  ChipWidget(
-                    image: 'assets/humudity.png',
-                    str: '${vm.model?.main?.humidity}%',
-                  ),
-                  Spacer(),
-                  ChipWidget(
-                    image: 'assets/wind.png',
-                    str: '${vm.model?.wind?.speed}km/h',
-                  ),
-                  const SizedBox(width: 30),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 40, right: 40, top: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xff001026),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Today',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          DateFormat.MMMd().format(DateTime.now()),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        )
-                      ],
-                    ),
-                    Text(
-                      "${vm.model?.main?.temp ?? 'Loading'}\u00b0C",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Image.network(
-                        'http://openweathermap.org/img/wn/${vm.model?.weather?[0].icon ?? '01n'}.png'),
-                    Text(
-                      DateFormat.Hm().format(DateTime.now()),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    )
-                  ],
+            Row(
+              children: [
+                MyTextInput(
+                  controllerFirstName: _controllerFirstName,
+                  label: 'First name',
                 ),
-              ),
+                MyTextInput(
+                  controllerFirstName: _controllerLastName,
+                  label: 'Last name',
+                ),
+              ],
             ),
+            MyTextInput(
+              controllerFirstName: _controllerEmail,
+              label: 'Email',
+              error: _errorText,
+              onChange: (email) {
+                if (vm.isEmailValid(email)) {
+                  _errorText = null;
+                } else {
+                  _errorText = "Enter valid phone or password";
+                }
+                setState(() {});
+              },
+            ),
+            MyTextInput(
+              controllerFirstName: _controllerPhone,
+              label: 'Phone',
+            ),
+            MyTextInput(
+              controllerFirstName: _controllerMessage,
+              label: 'Message',
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (vm.isEmailValid(_controllerEmail.text)) {
+                  vm.sendEmail(
+                    context: context,
+                    firstName: _controllerFirstName.text,
+                    lastName: _controllerLastName.text,
+                    email: _controllerEmail.text,
+                    phone: _controllerPhone.text,
+                    message: _controllerMessage.text,
+                  );
+                }
+              },
+              child: const Text('Enter'),
+            )
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     print('BuildButton');
-      //     vm.getWeather();
-      //   },
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.add),
-      // ),
     );
   }
 }
 
-class ChipWidget extends StatelessWidget {
-  final String image, str;
-  const ChipWidget({
+class MyTextInput extends StatelessWidget {
+  final Function(String text)? onChange;
+  final String? error;
+  const MyTextInput({
     Key? key,
-    required this.image,
-    required this.str,
-  }) : super(key: key);
+    required TextEditingController controllerFirstName,
+    required this.label,
+    this.onChange,
+    this.error,
+  })  : _controllerFirstName = controllerFirstName,
+        super(key: key);
+
+  final TextEditingController _controllerFirstName;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Image.asset(image),
-        const SizedBox(width: 5),
-        Text(
-          str,
-          style: const TextStyle(
-            color: Colors.white,
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.all(5),
+        child: TextField(
+          onChanged: onChange,
+          controller: _controllerFirstName,
+          decoration: InputDecoration(
+            errorText: error,
+            label: Text(label),
+            border: const OutlineInputBorder(),
           ),
         ),
-      ],
+      ),
     );
   }
 }
